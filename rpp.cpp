@@ -26,7 +26,7 @@ class observable : public Dependency {
 public:
     explicit observable(T value) : value_{value} {}
 
-	// TODO: all the overloads
+    // TODO: all the overloads
     const auto &operator()() const {
         if (ctx.current_dependencies) {
             ctx.current_dependencies->insert(this); // TODO: or .emplace()?
@@ -57,24 +57,24 @@ private:
 };
 
 const auto auto_run = [](auto &&callback) {
-	const auto idx = ctx.dependencies.size();
+    const auto idx = ctx.dependencies.size();
 
-	auto reaction_ = [
-		callback = std::forward<decltype(callback)>(callback),
-		idx
-	] {
-		auto current_dependencies = Dependencies{};
-		ctx.current_dependencies = &current_dependencies;
+    auto reaction_ = [
+        callback = std::forward<decltype(callback)>(callback),
+        idx
+    ] {
+        auto current_dependencies = Dependencies{};
+        ctx.current_dependencies = &current_dependencies;
 
         callback();
 
-		auto &[reaction, dependencies] = ctx.dependencies[idx];
+        auto &[reaction, dependencies] = ctx.dependencies[idx];
 
         auto unused_dependencies = std::move(dependencies);
-		for (auto& dependency : *ctx.current_dependencies) {
-			unused_dependencies.erase(dependency);
-		}
-		for (auto &dependency : unused_dependencies) {
+        for (auto& dependency : *ctx.current_dependencies) {
+            unused_dependencies.erase(dependency);
+        }
+        for (auto &dependency : unused_dependencies) {
             ctx.reactions[dependency].erase(&reaction);
         }
         for (auto &dependency : *ctx.current_dependencies) {
@@ -85,8 +85,8 @@ const auto auto_run = [](auto &&callback) {
         ctx.current_dependencies = nullptr;
     };
 
-	ctx.dependencies.push_back({std::move(reaction_), {}});
-	ctx.dependencies[idx].first();
+    ctx.dependencies.push_back({std::move(reaction_), {}});
+    ctx.dependencies[idx].first();
 };
 
 } // namespace rpp
@@ -128,27 +128,27 @@ int main() {
             cout << "y = " << y() << endl;
     });
 
-	cout << "x = 10: --> ";
+    cout << "x = 10: --> ";
     x = 10; // "x = 10"
-	cout << endl;
-	cout << "y = 12: --> ";
-	y = 12;
-	cout << endl;
+    cout << endl;
+    cout << "y = 12: --> ";
+    y = 12;
+    cout << endl;
 
-	cout << "b = false: --> ";
-	b = false; // "y = 12"
-	cout << endl;
+    cout << "b = false: --> ";
+    b = false; // "y = 12"
+    cout << endl;
 
-	cout << "x = 100: --> ";
-	x = 100;
-	cout << endl;
-	cout << "y = 102: --> ";
-	y = 102; // "y = 102"
-	cout << endl;
+    cout << "x = 100: --> ";
+    x = 100;
+    cout << endl;
+    cout << "y = 102: --> ";
+    y = 102; // "y = 102"
+    cout << endl;
 
-	cout << "b = true: --> ";
-	b = true; // "x = 100"
-	cout << endl;
+    cout << "b = true: --> ";
+    b = true; // "x = 100"
+    cout << endl;
 
     // x = 10; // b = true; x = 10; y = 2; z = 11
     // y = 12;
