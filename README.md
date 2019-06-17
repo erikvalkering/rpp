@@ -1,2 +1,2 @@
 # rpp
-Reactive++: state management made simple
+Reactive++: dead-simple state management
