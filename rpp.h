@@ -54,6 +54,20 @@ private:
     T value_;
 };
 
+template<class F>
+class computed {
+public:
+    explicit computed(F &&callback) : callback{std::forward<F>(callback)} {
+    }
+    
+    decltype(auto) operator()() const {
+        return callback();
+    }
+
+private:
+    F callback;
+};
+
 const auto auto_run = [](auto&& callback) {
     const auto idx = ctx.dependencies.size();
 
