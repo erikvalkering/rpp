@@ -1,2 +1,2 @@
 # rpp
-Reactive++: dead-simple state management
+Reactive++: a reactive state management library for C++
