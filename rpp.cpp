@@ -17,20 +17,6 @@ int main() {
     //         return y(ctx) + 1;
     // }};
     
-    // b = true; x = 0; y = 2; z = 1
-//     auto_run([&](auto &ctx) {
-//         cout << "b = " << b(ctx) << "; ";
-//         cout << "x = " << x(nullptr) << "; ";
-//         cout << "y = " << y(nullptr) << "; ";
-// //        cout << "z = " << z(ctx) << endl;
-//     });
-//     auto_run([&] {
-//         cout << "b = " << b() << "; ";
-//         cout << "x = " << x(nullptr) << "; ";
-//         cout << "y = " << y(nullptr) << "; ";
-// //        cout << "z = " << z() << endl;
-//     });
-
     // "x = 0"
     auto_run([&] {
         if (b())
@@ -60,13 +46,4 @@ int main() {
     cout << "b = true: --> ";
     b = true; // "x = 100"
     cout << endl;
-
-    // x = 10; // b = true; x = 10; y = 2; z = 11
-    // y = 12;
-
-    // b = false; // b = false; x = 10; y = 12; z = 13
-    // x = 100;
-    // y = 102; // b = false; x = 100; y = 102; z = 103
-
-    // b = true; // b = true; x = 100; y = 102; z = 101
 }
