@@ -1,5 +1,5 @@
 #include <functional>
-#include <map>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -13,7 +13,7 @@ namespace rpp {
     using Dependencies = std::unordered_set<const Dependency*>;
 
     struct Context {
-        std::map<const Dependency*, std::unordered_set<const Reaction*>> reactions{};
+        std::unordered_map<const Dependency*, std::unordered_set<const Reaction*>> reactions{};
         std::vector<std::pair<Reaction, Dependencies>> dependencies{};
 
         Dependencies* current_dependencies = nullptr;
