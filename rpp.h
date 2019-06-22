@@ -5,8 +5,12 @@
 
 namespace rpp {
 
+static auto counter = 0;
+
 // TODO: consistency in casing
-struct Dependency {};
+struct Dependency {
+    char name = 'a' + counter++;
+};
 
 // TODO: rename to Observer?
 using Reaction = std::function<void()>;
