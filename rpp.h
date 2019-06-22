@@ -17,7 +17,7 @@ using Reaction = std::function<void()>;
 using Dependencies = std::unordered_set<const Dependency*>;
 
 struct Context {
-    std::unordered_map<const Dependency*, std::unordered_set<const Reaction*>> reactions{};
+    std::unordered_map<const Dependency*, std::unordered_set<size_t>> reactions{};
     std::vector<std::pair<Reaction, Dependencies>> dependencies{};
 
     Dependencies* current_dependencies = nullptr;
@@ -45,9 +45,11 @@ public:
     auto& operator=(U&& value) {
         value_ = std::forward<U>(value);
 
-        if (auto reactions = ctx.reactions.find(this); reactions != ctx.reactions.end()) {
-            for (auto& reaction : reactions->second) {
-                (*reaction)();
+        if (const auto it_reactions = ctx.reactions.find(this); it_reactions != ctx.reactions.end()) {
+            const auto reactions = it_reactions->second;
+            for (auto& reaction_idx : reactions) {
+                const auto &[reaction, _] = ctx.dependencies[reaction_idx];
+                reaction();
             }
         }
 
@@ -91,10 +93,10 @@ const auto auto_run = [](auto&& callback) {
             unused_dependencies.erase(dependency);
         }
         for (auto& dependency : unused_dependencies) {
-            ctx.reactions[dependency].erase(&reaction);
+            ctx.reactions[dependency].erase(idx);
         }
         for (auto& dependency : *ctx.current_dependencies) {
-            ctx.reactions[dependency].insert(&reaction);
+            ctx.reactions[dependency].insert(idx);
         }
 
         ctx.dependencies[idx].second = move(*ctx.current_dependencies);
