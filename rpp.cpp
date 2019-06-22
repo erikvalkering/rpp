@@ -19,32 +19,22 @@ int main() {
             return y();
     }};
 
-    cout << "auto_run 1";
-    auto_run([&] { cout << "z = " << z(); });
-    cout << endl;
-    cout << "auto_run 2";
-    auto_run([&] { cout << "z + 1 = " << z() << " "; });
-    cout << endl;
+    auto_run([&] { cout << "auto_run 1: z == " << z() << endl; });
+    auto_run([&] { cout << "auto_run 2: z == " << z() << endl; });
 
-    cout << "x = 10: -->";
-    x = 10; // "z = 10"
-    cout << endl;
-    cout << "y = 12: -->";
-    y = 12;
-    cout << endl;
+    cout << "x = 10" << endl;
+             x = 10;
+    cout << "y = 12" << endl;
+             y = 12;
 
-    cout << "b = false: -->";
-    b = false; // "z = 12"
-    cout << endl;
+    cout << "b = false" << endl;
+             b = false;
 
-    cout << "x = 100: -->";
-    x = 100;
-    cout << endl;
-    cout << "y = 102: -->";
-    y = 102; // "z = 102"
-    cout << endl;
+    cout << "x = 100" << endl;
+             x = 100;
+    cout << "y = 102" << endl;
+             y = 102;
 
-    cout << "b = true: -->";
-    b = true; // "z = 100"
-    cout << endl;
+    cout << "b = true" << endl;
+             b = true;
 }
