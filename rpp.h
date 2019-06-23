@@ -5,11 +5,13 @@
 
 namespace rpp {
 
-static auto counter = 0;
+struct variable {
+    static int counter = 0;
+    char name = 'a' + counter++;
+};
 
 // TODO: consistency in casing
-struct Dependency {
-    char name = 'a' + counter++;
+struct Dependency : variable {
 };
 
 // TODO: rename to Observer?
