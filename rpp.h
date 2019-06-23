@@ -10,30 +10,28 @@ struct variable {
     char name = 'a' + counter++;
 };
 
-// TODO: consistency in casing
-struct Dependency : variable {
+struct dependency : variable {
 };
 
-// TODO: rename to Observer?
-using Reaction = std::function<void()>;
-using Dependencies = std::unordered_set<const Dependency*>;
+using reaction = std::function<void()>;
+using Dependencies = std::unordered_set<const dependency *>;
 
 struct Context {
-    std::unordered_map<const Dependency*, std::unordered_set<size_t>> reactions{};
-    std::vector<std::pair<Reaction, Dependencies>> dependencies{};
+    std::unordered_map<const dependency *, std::unordered_set<size_t>> reactions{};
+    std::vector<std::pair<reaction, Dependencies>> dependencies{};
 
-    Dependencies* current_dependencies = nullptr;
+    Dependencies *current_dependencies = nullptr;
 } ctx;
 
 template<typename T>
-class observable : public Dependency {
+class observable : public dependency {
 public:
-    explicit observable(T value) : value_{ value } {}
+    explicit observable(T &&value) : value_{std::forward<T>(value)} {
+    }
 
-    // TODO: all the overloads
-    const auto& operator()() const {
+    const auto &operator()() const {
         if (ctx.current_dependencies) {
-            ctx.current_dependencies->insert(this); // TODO: or .emplace()?
+            ctx.current_dependencies->insert(this);
         }
 
         return value_;
@@ -44,7 +42,7 @@ public:
     }
 
     template<typename U>
-    auto& operator=(U&& value) {
+    auto &operator=(U &&value) {
         value_ = std::forward<U>(value);
 
         if (const auto it_reactions = ctx.reactions.find(this); it_reactions != ctx.reactions.end()) {
@@ -76,28 +74,28 @@ private:
     F callback;
 };
 
-const auto auto_run = [](auto&& callback) {
+const auto auto_run = [](auto &&callback) {
     const auto idx = ctx.dependencies.size();
 
     auto reaction_ = [
         callback = std::forward<decltype(callback)>(callback),
-            idx
+        idx
     ]{
         auto current_dependencies = Dependencies{};
         ctx.current_dependencies = &current_dependencies;
 
         callback();
 
-        auto& [reaction, dependencies] = ctx.dependencies[idx];
+        auto &[reaction, dependencies] = ctx.dependencies[idx];
 
         auto unused_dependencies = std::move(dependencies);
-        for (auto& dependency : *ctx.current_dependencies) {
+        for (const auto &dependency : *ctx.current_dependencies) {
             unused_dependencies.erase(dependency);
         }
-        for (auto& dependency : unused_dependencies) {
+        for (const auto &dependency : unused_dependencies) {
             ctx.reactions[dependency].erase(idx);
         }
-        for (auto& dependency : *ctx.current_dependencies) {
+        for (const auto &dependency : *ctx.current_dependencies) {
             ctx.reactions[dependency].insert(idx);
         }
 
@@ -105,7 +103,7 @@ const auto auto_run = [](auto&& callback) {
         ctx.current_dependencies = nullptr;
     };
 
-    ctx.dependencies.push_back({ std::move(reaction_), {} });
+    ctx.dependencies.push_back({std::move(reaction_), {}});
     ctx.dependencies[idx].first();
 };
 
