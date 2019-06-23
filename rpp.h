@@ -5,8 +5,9 @@
 
 namespace rpp {
 
+int counter = 0;
+
 struct variable {
-    static int counter = 0;
     char name = 'a' + counter++;
 };
 
