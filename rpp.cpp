@@ -38,3 +38,20 @@ int main() {
     cout << "b = true" << endl;
              b = true;
 }
+
+auto test() {
+    using namespace std;
+    using namespace rpp;
+
+    //
+    // [a] <--- (b) <-
+    //       `- (c) <-`- (d) <-
+    //         `---------------`{autorun}
+
+    auto a = observable{1};
+    auto b = computed{[&] { return a(); }};
+    auto c = computed{[&] { return a(); }};
+    auto d = computed{[&] { return b() + c(); }};
+    
+    auto_run([&] { cout << a() + d() << endl; });
+}
