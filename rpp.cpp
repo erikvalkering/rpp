@@ -83,3 +83,19 @@ auto test_unregister() {
     unregister();
     a = 3; // nothing
 }
+
+auto test_scope() {
+    using namespace std;
+    using namespace rpp;
+
+    auto a = observable{1};
+
+    {
+        auto b = computed{[&] { return a(); }};
+
+        // b goes out of scope, but is not observing a
+        // therefore, no unregistering needs to be done
+    }
+
+    a = 2; // nothing
+}
