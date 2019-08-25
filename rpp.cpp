@@ -118,3 +118,22 @@ auto test_auto_unregister() {
 
     a = 3; // nothing
 }
+
+auto test_auto_unregister_dangling() {
+    using namespace std;
+    using namespace rpp;
+
+    auto a = observable{1};
+
+    {
+        auto b = computed{[&] { return a(); }};
+        autorun([&] { cout << a() << b() << endl; });
+
+        a = 2; // cout << 2 << 2 << endl;
+
+        // b goes out of scope, unregisters itself
+        // because invoking the autorun would be undefined behavior, should we also unregister it?
+    }
+
+    a = 3; // nothing
+}
