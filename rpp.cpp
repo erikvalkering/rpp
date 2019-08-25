@@ -99,3 +99,22 @@ auto test_scope() {
 
     a = 2; // nothing
 }
+
+auto test_auto_unregister() {
+    using namespace std;
+    using namespace rpp;
+
+    auto a = observable{1};
+
+    {
+        auto b = computed{[&] { return a(); }};
+        autorun([&] { cout << b() << endl; });
+
+        a = 2; // cout << 2 << endl;
+
+        // b goes out of scope, unregisters itself
+        // autorun is dangling and should therefore be unregistered as well
+    }
+
+    a = 3; // nothing
+}
