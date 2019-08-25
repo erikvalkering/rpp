@@ -56,6 +56,21 @@ auto test() {
     autorun([&] { cout << a() + d() << endl; });
 }
 
+auto test_lazy() {
+    using namespace std;
+    using namespace rpp;
+
+    auto a = observable{1};
+
+    auto b = computed{[&] { cout << a() << endl; }};
+
+    cout << b() << endl; // cout << 1 << endl;
+
+    a = 2; // nothing
+
+    cout << b() << endl; // cout << 2 << endl;
+}
+
 auto test_unregister() {
     using namespace std;
     using namespace rpp;
