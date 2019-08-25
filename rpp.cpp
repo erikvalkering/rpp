@@ -53,5 +53,18 @@ auto test() {
     auto c = computed{[&] { return a(); }};
     auto d = computed{[&] { return b() + c(); }};
     
-    auto_run([&] { cout << a() + d() << endl; });
+    autorun([&] { cout << a() + d() << endl; });
+}
+
+auto test_unregister() {
+    using namespace std;
+    using namespace rpp;
+
+    auto a = observable{1};
+
+    auto unregister = autorun([&] { cout << a() << endl; });
+    a = 2; // cout << 2 << endl;
+
+    unregister();
+    a = 3; // nothing
 }
