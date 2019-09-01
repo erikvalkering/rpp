@@ -1,28 +1,29 @@
 #include <functional>
+#include <memory>
+#include <stack>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
 namespace rpp {
 
-int counter = 0;
+auto counter = 0;
 
 struct variable {
     char name = 'a' + counter++;
 };
 
+using observer = std::function<void ()>;
+
 struct dependency : variable {
+    std::vector<std::shared_ptr<observer>> observers;
 };
 
-using reaction = std::function<void()>;
-using Dependencies = std::unordered_set<const dependency *>;
-
 struct Context {
-    std::unordered_map<const dependency *, std::unordered_set<size_t>> reactions{};
-    std::vector<std::pair<reaction, Dependencies>> dependencies{};
+    std::stack<std::shared_ptr<observer>> current_observers{};
+};
 
-    Dependencies *current_dependencies = nullptr;
-} ctx;
+auto ctx = Context{};
 
 template<typename T>
 class observable : public dependency {
@@ -31,14 +32,14 @@ public:
     }
 
     const auto &operator()() const {
-        if (ctx.current_dependencies) {
-            ctx.current_dependencies->insert(this);
+        if (!empty(ctx.current_observers)) {
+            observers.push_back(ctx.current_observers.top());
         }
 
         return value_;
     }
 
-    const auto& operator()(nullptr_t) const {
+    const auto &operator()(nullptr_t) const {
         return value_;
     }
 
@@ -46,12 +47,21 @@ public:
     auto &operator=(U &&value) {
         value_ = std::forward<U>(value);
 
-        if (const auto it_reactions = ctx.reactions.find(this); it_reactions != ctx.reactions.end()) {
-            const auto reactions = it_reactions->second;
-            for (auto& reaction_idx : reactions) {
-                const auto &[reaction, _] = ctx.dependencies[reaction_idx];
-                reaction();
-            }
+        // 1. recursively call all the observers
+        // 1a. each observer clears its cache (if its a computed observer)
+        // 1b. each observer appends its reaction to a list of reactions (as a tracked_observer)
+        // 1c. each observer recurses its child observers
+        // 1d. each observer clears its list of observers
+        auto reactions = std::vector<std::shared_ptr<observer>>{};
+        for (const auto &observer : observers) {
+            (*observer)(reactions);
+        }
+
+        observers.clear();
+
+        // 2. call each reaction in the list of reactions populated in step 1
+        for (const auto &reaction : reactions) {
+            (*reaction)();
         }
 
         return *this;
@@ -61,51 +71,57 @@ private:
     T value_;
 };
 
-template<class F>
-class computed {
-public:
-    explicit computed(F &&callback) : callback{std::forward<F>(callback)} {
-    }
-    
+//template<class F>
+//class computed {
+//public:
+//    explicit computed(F &&callback) : callback{std::forward<F>(callback)} {
+//    }
+//    
+//    decltype(auto) operator()() const {
+//        if (!value) {
+//            value = callback();
+//
+//            // TODO: add a recalculate reac
+//        }
+//
+//        if (!empty(ctx.current_dependencies)) {
+//            ctx.current_dependencies.top().insert(this);
+//        }
+//
+//        return *value;
+//    }
+//
+//private:
+//    F callback;
+//
+//    using value_type = decltype(callback());
+//    std::optional<value_type> value;
+//};
+
+template<class Reaction>
+struct tracking_observer : std::enable_shared_from_this<tracking_observer> {
+    Reaction reaction;
+
     decltype(auto) operator()() const {
-        return callback();
+        ctx.current_observers.push(shared_from_this());
+        reaction();
+        ctx.current_observers.pop();
     }
 
-private:
-    F callback;
+    auto execute_and_observe() const && {
+        const auto &observer = *std::make_shared<tracking_observer>(std::move(*this));
+        observer();
+    }
 };
 
-const auto auto_run = [](auto &&callback) {
-    const auto idx = ctx.dependencies.size();
+const auto autorun = [](auto &&reaction) {
+    //using observer_t = decltype(observer);
+    //const auto tracking_observer = std::make_shared<tracking_observer<observer_t &&>>(
+    //    std::forward<decltype(observer)>(observer)
+    //);
 
-    auto reaction_ = [
-        callback = std::forward<decltype(callback)>(callback),
-        idx
-    ]{
-        auto current_dependencies = Dependencies{};
-        ctx.current_dependencies = &current_dependencies;
-
-        callback();
-
-        auto &[reaction, dependencies] = ctx.dependencies[idx];
-
-        auto unused_dependencies = std::move(dependencies);
-        for (const auto &dependency : *ctx.current_dependencies) {
-            unused_dependencies.erase(dependency);
-        }
-        for (const auto &dependency : unused_dependencies) {
-            ctx.reactions[dependency].erase(idx);
-        }
-        for (const auto &dependency : *ctx.current_dependencies) {
-            ctx.reactions[dependency].insert(idx);
-        }
-
-        ctx.dependencies[idx].second = move(*ctx.current_dependencies);
-        ctx.current_dependencies = nullptr;
-    };
-
-    ctx.dependencies.push_back({std::move(reaction_), {}});
-    ctx.dependencies[idx].first();
+    //(*tracking_observer)();
+    tracking_observer{std::forward<decltype(reaction)>(reaction)}.execute_and_observe();
 };
 
 } // namespace rpp
